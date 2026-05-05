@@ -20,6 +20,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
+# Set a local fallback database URL for container startup.
+# Override this at runtime with -e DATABASE_URL="..." for production.
+ENV DATABASE_URL="sqlite:///./notification.db"
+
 # Expose service port (logical, not mandatory)
 EXPOSE 8084
 

@@ -4,7 +4,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 
-def send_email(to_email: str, subject: str, body: str):
+def send_email(to_email: str, subject: str, plain_body: str, html_body: str | None = None):
 
     # 🔥 READ ENV VARS AT RUNTIME (NOT AT IMPORT)
     SMTP_HOST = os.environ["SMTP_HOST"]
@@ -15,11 +15,14 @@ def send_email(to_email: str, subject: str, body: str):
     if not SMTP_HOST or not SMTP_USER or not SMTP_PASSWORD:
         raise RuntimeError("SMTP configuration missing")
 
-    msg = MIMEMultipart()
+    msg = MIMEMultipart("alternative")
     msg["From"] = SMTP_USER
     msg["To"] = to_email
     msg["Subject"] = subject
-    msg.attach(MIMEText(body, "plain"))
+    msg.attach(MIMEText(plain_body, "plain"))
+
+    if html_body:
+        msg.attach(MIMEText(html_body, "html"))
 
     server = smtplib.SMTP(SMTP_HOST, SMTP_PORT)
     try:
