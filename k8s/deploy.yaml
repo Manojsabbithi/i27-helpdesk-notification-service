@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: i27-helpdesk-notification
+  namespace: ${NAMESPACE}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: i27-helpdesk-notification
+  template:
+    metadata:
+      labels:
+        app: i27-helpdesk-notification
+    spec:
+      containers:
+        - name: i27-helpdesk-notification
+          image: ${IMAGE_NAME}:${IMAGE_TAG}
+          ports:
+            - containerPort: 8084
+          envFrom:
+            - secretRef:
+                name: i27-helpdesk-notification-secret
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8084
+            failureThreshold: 6
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8084
+            failureThreshold: 3
+            periodSeconds: 10
+            timeoutSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8084
+            failureThreshold: 6
+            periodSeconds: 10
+            timeoutSeconds: 3
+          resources:
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
