@@ -183,6 +183,11 @@ pipeline {
                       --dry-run=client \
                       -f "${RENDERED_MANIFEST}"
 
+                    echo "===== APPLY SERVICE ACCOUNT ====="
+
+                    kubectl apply \
+                      -f k8s/aws/serviceaccount.yaml
+
                     echo "===== APPLY CONFIGMAP ====="
 
                     kubectl apply \

@@ -4,5 +4,6 @@ metadata:
   name: i27-helpdesk-notification-config
   namespace: i27-helpdesk-dev
 data:
+  AWS_REGION: "ap-south-2"
   AUTH_SERVICE_URL: "http://i27-helpdesk-auth"
   TICKET_SERVICE_URL: "http://i27-helpdesk-ticket"

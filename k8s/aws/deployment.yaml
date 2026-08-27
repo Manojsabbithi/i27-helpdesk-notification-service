@@ -17,6 +17,7 @@ spec:
         app: i27-helpdesk-notification
 
     spec:
+      serviceAccountName: i27-helpdesk-notification
       containers:
         - name: i27-helpdesk-notification
           image: __IMAGE_URI__

@@ -1,36 +1,59 @@
-import smtplib
 import os
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+
+import boto3
 
 
-def send_email(to_email: str, subject: str, plain_body: str, html_body: str | None = None):
+def send_email(
+    to_email: str,
+    subject: str,
+    plain_body: str,
+    html_body: str | None = None,
+):
+    """
+    Send an email through Amazon SES.
 
-    # 🔥 READ ENV VARS AT RUNTIME (NOT AT IMPORT)
-    SMTP_HOST = os.environ["SMTP_HOST"]
-    SMTP_PORT = int(os.environ["SMTP_PORT"])
-    SMTP_USER = os.environ["SMTP_USER"]
-    SMTP_PASSWORD = os.environ["SMTP_PASSWORD"]
+    AWS credentials are not stored in the application.
+    In EKS, boto3 receives temporary AWS credentials through IRSA.
+    """
 
-    if not SMTP_HOST or not SMTP_USER or not SMTP_PASSWORD:
-        raise RuntimeError("SMTP configuration missing")
+    aws_region = os.getenv("AWS_REGION", "ap-south-2")
+    from_email = os.getenv("SES_FROM_EMAIL")
 
-    msg = MIMEMultipart("alternative")
-    msg["From"] = SMTP_USER
-    msg["To"] = to_email
-    msg["Subject"] = subject
-    msg.attach(MIMEText(plain_body, "plain"))
+    if not from_email:
+        raise RuntimeError("SES_FROM_EMAIL environment variable is not configured")
+
+    ses = boto3.client(
+        "sesv2",
+        region_name=aws_region,
+    )
+
+    body = {
+        "Text": {
+            "Data": plain_body,
+            "Charset": "UTF-8",
+        }
+    }
 
     if html_body:
-        msg.attach(MIMEText(html_body, "html"))
+        body["Html"] = {
+            "Data": html_body,
+            "Charset": "UTF-8",
+        }
 
-    server = smtplib.SMTP(SMTP_HOST, SMTP_PORT)
-    try:
-        server.ehlo()
-        server.starttls()
-        server.ehlo()
-        server.login(SMTP_USER, SMTP_PASSWORD)
-        server.send_message(msg)
-        print(f"📧 Email sent to {to_email}")
-    finally:
-        server.quit()
+    response = ses.send_email(
+        FromEmailAddress=from_email,
+        Destination={
+            "ToAddresses": [to_email],
+        },
+        Content={
+            "Simple": {
+                "Subject": {
+                    "Data": subject,
+                    "Charset": "UTF-8",
+                },
+                "Body": body,
+            }
+        },
+    )
+
+    return response["MessageId"]
